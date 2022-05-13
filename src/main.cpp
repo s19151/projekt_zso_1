@@ -5,7 +5,7 @@
 #include <queue>
 #include "Group.h"
 
-//#define SLEEPS_AND_PRINTS
+#define SLEEPS_AND_PRINTS
 
 using namespace std;
 
@@ -19,6 +19,8 @@ const int NUM_OF_TABLES = 10;
 const int NUM_OF_GROUPS = 20;
 const int SLEEP_TIME = 1;
 const int EAT_TIME = 5;
+
+const int NUM_OF_LOOPS = 10;
 
 bool programFinished;
 
@@ -282,6 +284,11 @@ void joinGroupThreads(vector<Group*> &groups) {
     #endif
 }
 
+void stopProgram() {
+    programFinished = true;
+    pthread_cond_broadcast(&queueCond);
+}
+
 void initializePthreadVariables() {
     pthread_mutex_init(&tablesMutex, NULL);
     pthread_mutex_init(&queueMutex, NULL);
@@ -302,7 +309,7 @@ void destroyTables(int numOfTables) {
     }
 }
 
-void projekt_zso() {
+void projekt_zso(int numOfTables, int NumOfSeats, int numOfGroups, int numOfWaiters) {
     #ifdef SLEEPS_AND_PRINTS
     printf("Restaurant opens\n");
     #endif
@@ -311,18 +318,17 @@ void projekt_zso() {
     vector<pthread_t> waiters;
     vector<Group*> groups;
     programFinished = false;
-    createTables(NUM_OF_TABLES, MAX_SEATS_PER_TABLE);
-    createGroups(groups, NUM_OF_GROUPS);
+    createTables(numOfTables, NumOfSeats);
+    createGroups(groups, numOfGroups);
 
-    createWaiterThreads(waiters, NUM_OF_WAITERS, waiterThreadFn);
+    createWaiterThreads(waiters, numOfWaiters, waiterThreadFn);
     createGroupThreads(groups, groupThreadFn);
     joinGroupThreads(groups);
 
-    programFinished = true;
-    pthread_cond_broadcast(&queueCond);
+    stopProgram();
     joinWaiterThreads(waiters);
 
-    destroyTables(NUM_OF_TABLES);
+    destroyTables(numOfTables);
     destroyPthreadVariables();
 
     #ifdef SLEEPS_AND_PRINTS
@@ -331,11 +337,11 @@ void projekt_zso() {
 }
 
 int main(int argc, char* argv[]) {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < NUM_OF_LOOPS; i++) {
         #ifdef SLEEPS_AND_PRINTS
         printf("Program loop: %d\n", i+1);
         #endif
-        projekt_zso();
+        projekt_zso(NUM_OF_TABLES, MAX_SEATS_PER_TABLE, NUM_OF_GROUPS, NUM_OF_WAITERS);
     }
 
     return 0;
