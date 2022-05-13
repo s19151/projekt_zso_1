@@ -67,12 +67,6 @@ build CMakeFiles/zso_pr_1.dir/src/Table.cpp.o: CXX_COMPILER__zso_pr_1_Debug /hom
   OBJECT_DIR = CMakeFiles/zso_pr_1.dir
   OBJECT_FILE_DIR = CMakeFiles/zso_pr_1.dir/src
 
-build CMakeFiles/zso_pr_1.dir/src/Client.cpp.o: CXX_COMPILER__zso_pr_1_Debug /home/ubuntu/devProjects/zso-pr-1/src/Client.cpp || cmake_object_order_depends_target_zso_pr_1
-  DEP_FILE = CMakeFiles/zso_pr_1.dir/src/Client.cpp.o.d
-  FLAGS = -g -std=gnu++14
-  OBJECT_DIR = CMakeFiles/zso_pr_1.dir
-  OBJECT_FILE_DIR = CMakeFiles/zso_pr_1.dir/src
-
 
 # =============================================================================
 # Link build statements for EXECUTABLE target zso_pr_1
@@ -81,7 +75,7 @@ build CMakeFiles/zso_pr_1.dir/src/Client.cpp.o: CXX_COMPILER__zso_pr_1_Debug /ho
 #############################################
 # Link the executable zso_pr_1
 
-build zso_pr_1: CXX_EXECUTABLE_LINKER__zso_pr_1_Debug CMakeFiles/zso_pr_1.dir/src/main.cpp.o CMakeFiles/zso_pr_1.dir/src/Group.cpp.o CMakeFiles/zso_pr_1.dir/src/Table.cpp.o CMakeFiles/zso_pr_1.dir/src/Client.cpp.o
+build zso_pr_1: CXX_EXECUTABLE_LINKER__zso_pr_1_Debug CMakeFiles/zso_pr_1.dir/src/main.cpp.o CMakeFiles/zso_pr_1.dir/src/Group.cpp.o CMakeFiles/zso_pr_1.dir/src/Table.cpp.o
   FLAGS = -g
   LINK_LIBRARIES = -lpthread
   OBJECT_DIR = CMakeFiles/zso_pr_1.dir

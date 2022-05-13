@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <unistd.h>
 #include "Group.h"
 

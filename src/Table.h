@@ -16,4 +16,4 @@ Table* createTable(int id, int numOfSeats);
 
 void destroyTable(Table* table);
 
-#endif //ZSO_PR_1_TABLE_H
+#endif
