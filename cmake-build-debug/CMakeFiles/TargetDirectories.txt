@@ -1,0 +1,3 @@
+/home/ubuntu/devProjects/zso-pr-1/cmake-build-debug/CMakeFiles/zso_pr_1.dir
+/home/ubuntu/devProjects/zso-pr-1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/ubuntu/devProjects/zso-pr-1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
