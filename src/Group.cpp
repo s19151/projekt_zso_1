@@ -1,5 +1,6 @@
-#include <unistd.h>
+#include <cstdio>
 #include "Group.h"
+#include "parameters.h"
 
 Group* createGroup(int id, size_t size, bool pair) {
     Group* group = new Group();
@@ -21,10 +22,103 @@ Group* createGroup(int id, size_t size, bool pair) {
     return group;
 }
 
+Group** createGroups(int numOfGroups) {
+    Group** groups = new Group*[numOfGroups];
+
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Creating client groups\n");
+    #endif
+    bool pair = false;
+    for (int i = 0; i < numOfGroups; i++) {
+        int size = (i % MAX_GROUP_SIZE) + 1;
+        groups[i] = createGroup(i+1, size, size == PAIR_SIZE && pair);
+        pair = !pair;
+    }
+
+    return groups;
+}
+
 void destroyGroup(Group* group) {
     group->table = NULL;
     pthread_mutex_destroy(&group->mutex);
     pthread_cond_destroy(&group->cond);
     delete [] group->clientThreads;
     delete group;
+}
+
+void createGroupThreads(Group** groups, size_t size, void* callbackFn(void* arg)) {
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Creating group threads\n");
+    #endif
+    for (int i = 0; i < size; i++) {
+        if (pthread_create(&groups[i]->thread, NULL, callbackFn, groups[i]) != 0) {
+            #ifdef SLEEPS_AND_PRINTS
+            perror("Failed to create Group thread");
+            #endif
+        }
+    }
+}
+
+void joinGroupThreads(Group** groups, size_t size) {
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Joining group threads\n");
+    #endif
+    for (int i = 0; i < size; i++) {
+        if (pthread_join(groups[i]->thread, NULL) != 0) {
+            #ifdef SLEEPS_AND_PRINTS
+            perror("Failed to join thread");
+            #endif
+        }
+        destroyGroup(groups[i]);
+    }
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Group threads finished\n");
+    #endif
+}
+
+void enterRestaurantQueue(queue<Group*> &queue, pthread_mutex_t &queueMutex, pthread_cond_t &queueCond, Group* group) {
+    pthread_mutex_lock(&queueMutex);
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Group %d enters queue\n", group->id);
+    #endif
+    queue.push(group);
+    pthread_mutex_unlock(&queueMutex);
+    pthread_cond_broadcast(&queueCond);
+}
+
+void waitForTable(Group* group) {
+    pthread_mutex_lock(&group->mutex);
+    while (!group->satByTable) {
+        pthread_cond_wait(&group->cond, &group->mutex);
+    }
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Group %d sat by table\n", group->id);
+    #endif
+    pthread_mutex_unlock(&group->mutex);
+}
+
+void leaveRestaurant(Group* group) {
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Group's %d clients finished eating\n", group->id);
+    #endif
+    pthread_mutex_lock(&group->table->mutex);
+    group->table->leaveVotes = group->table->leaveVotes + group->size;
+    pthread_mutex_unlock(&group->table->mutex);
+    pthread_cond_broadcast(&group->table->cond);
+
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Group %d waits for other groups to stop eating\n", group->id);
+    #endif
+    pthread_mutex_lock(&group->table->mutex);
+    while (group->table->leaveVotes != group->table->takenSeats) {
+        pthread_cond_wait(&group->table->cond, &group->table->mutex);
+    }
+
+    #ifdef SLEEPS_AND_PRINTS
+    printf("Group %d leaves restaurant\n", group->id);
+    #endif
+    group->table->availableSeats += group->size;
+    group->table->takenSeats -= group->size;
+    group->table->leaveVotes -= group->size;
+    pthread_mutex_unlock(&group->table->mutex);
 }

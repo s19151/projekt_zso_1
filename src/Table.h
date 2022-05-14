@@ -14,6 +14,12 @@ struct Table {
 
 Table* createTable(int id, int numOfSeats);
 
+Table** createTables(int numOfTables, int numOfSeats);
+
 void destroyTable(Table* table);
+
+void destroyTables(Table** tables, int numOfTables);
+
+int findFreeTableIndex(Table** tables, size_t size, int neededNumOfSeats);
 
 #endif
