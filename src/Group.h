@@ -19,6 +19,8 @@ struct Group {
     Table* table;
 };
 
+int getNeededNumOfSeats(Group* group);
+
 Group* createGroup(int id, size_t size, bool pair);
 
 Group** createGroups(int numOfGroups, int maxGroupSize);
@@ -33,6 +35,6 @@ void enterRestaurantQueue(Group* group, queue<Group*> &queue, pthread_mutex_t &q
 
 void waitForTable(Group* group);
 
-void leaveRestaurant(Group* group, pthread_mutex_t tablesMutex, pthread_cond_t tablesCond);
+void leaveRestaurant(Group* group);
 
 #endif

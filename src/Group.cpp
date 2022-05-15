@@ -2,6 +2,10 @@
 #include "Group.h"
 #include "parameters.h"
 
+int getNeededNumOfSeats(Group* group) {
+    return group->size == PAIR_SIZE && group->pair ? MAX_GROUP_SIZE : group->size;
+}
+
 Group* createGroup(int id, size_t size, bool pair) {
     Group* group = new Group();
 
@@ -98,12 +102,12 @@ void waitForTable(Group* group) {
     pthread_mutex_unlock(&group->mutex);
 }
 
-void leaveRestaurant(Group* group, pthread_mutex_t tablesMutex, pthread_cond_t tablesCond) {
+void leaveRestaurant(Group* group) {
     #ifdef SLEEPS_AND_PRINTS
     printf("Group's %d clients finished eating\n", group->id);
     #endif
     pthread_mutex_lock(&group->table->mutex);
-    int takenSeats = group->size == PAIR_SIZE && group->pair ? MAX_SEATS_PER_TABLE : group->size;
+    int takenSeats = getNeededNumOfSeats(group);
     group->table->leaveVotes += takenSeats;
     pthread_mutex_unlock(&group->table->mutex);
 
@@ -123,8 +127,4 @@ void leaveRestaurant(Group* group, pthread_mutex_t tablesMutex, pthread_cond_t t
     group->table->leaveVotes -= takenSeats;
     pthread_cond_broadcast(&group->table->cond);
     pthread_mutex_unlock(&group->table->mutex);
-
-    pthread_mutex_lock(&tablesMutex);
-    pthread_cond_broadcast(&tablesCond);
-    pthread_mutex_unlock(&tablesMutex);
 }

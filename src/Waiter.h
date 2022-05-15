@@ -7,15 +7,21 @@ void createWaiterThreads(pthread_t* &waiters, int numOfWaiters, void* callbackFn
 
 void joinWaiterThreads(pthread_t* &waiters, size_t size);
 
-void seatGroupByTable(Group* group, Table* table);
+void seatGroupByTable(int waiterNumber, Group* group, Table* table);
 
-void lookForFreeTableAndSeatGroupByIt(
-        int waiterNumber,
-        Group* group,
-        Table** tables,
-        size_t size,
-        pthread_mutex_t &tablesMutex,
-        pthread_cond_t &tablesCond
-    );
+bool findTableAndSeatGroupByIt(
+    int waiterNumber,
+    Group* group,
+    int neededNumOfSeats,
+    Table** tables,
+    size_t size
+);
+
+void takeCareOfGroup(
+    int waiterNumber,
+    Group* group,
+    Table** tables,
+    size_t size
+);
 
 #endif

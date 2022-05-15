@@ -13,8 +13,6 @@ using namespace std;
 bool programFinished;
 
 Table** tables;
-pthread_mutex_t tablesMutex;
-pthread_cond_t tablesCond;
 
 queue<Group*> restaurantQueue;
 pthread_mutex_t queueMutex;
@@ -33,13 +31,11 @@ void takeCareOfGroupsInRestaurantQueue(int waiterNumber) {
         restaurantQueue.pop();
         pthread_mutex_unlock(&queueMutex);
 
-        lookForFreeTableAndSeatGroupByIt(
+        takeCareOfGroup(
             waiterNumber,
             group,
             tables,
-            NUM_OF_TABLES,
-            tablesMutex,
-            tablesCond
+            NUM_OF_TABLES
         );
     } else {
         pthread_mutex_unlock(&queueMutex);
@@ -74,7 +70,7 @@ void* groupThreadFn(void* arg) {
     waitForTable(group);
     createClientThreads(group, clientThreadFn);
     joinClientThreads(group);
-    leaveRestaurant(group, tablesMutex, tablesCond);
+    leaveRestaurant(group);
 
     return NULL;
 }
@@ -87,17 +83,13 @@ void stopProgram() {
 }
 
 void initializePthreadVariables() {
-    pthread_mutex_init(&tablesMutex, NULL);
     pthread_mutex_init(&queueMutex, NULL);
     pthread_cond_init(&queueCond, NULL);
-    pthread_cond_init(&tablesCond, NULL);
 }
 
 void destroyPthreadVariables() {
-    pthread_mutex_destroy(&tablesMutex);
     pthread_mutex_destroy(&queueMutex);
     pthread_cond_destroy(&queueCond);
-    pthread_cond_destroy(&tablesCond);
 }
 
 void projekt_zso(int numOfTables, int NumOfSeats, int numOfGroups, int maxGroupSize, int numOfWaiters) {
