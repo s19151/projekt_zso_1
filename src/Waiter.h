@@ -9,6 +9,13 @@ void joinWaiterThreads(pthread_t* &waiters, size_t size);
 
 void seatGroupByTable(Group* group, Table* table);
 
-void lookForFreeTableAndSeatGroupByIt(Table** tables, pthread_mutex_t &tablesMutex, pthread_cond_t &tablesCond, int waiterNumber, Group* group);
+void lookForFreeTableAndSeatGroupByIt(
+        int waiterNumber,
+        Group* group,
+        Table** tables,
+        size_t size,
+        pthread_mutex_t &tablesMutex,
+        pthread_cond_t &tablesCond
+    );
 
 #endif

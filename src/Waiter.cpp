@@ -37,34 +37,53 @@ void joinWaiterThreads(pthread_t* &waiters, size_t size) {
 }
 
 void seatGroupByTable(Group* group, Table* table) {
-    pthread_mutex_lock(&table->mutex);
-    table->takenSeats = table->takenSeats + group->size;
-    pthread_mutex_unlock(&table->mutex);
+    int takenSeats = group->size == PAIR_SIZE && group->pair ? MAX_SEATS_PER_TABLE : group->size;
+    table->takenSeats += takenSeats;
+    table->availableSeats -= takenSeats;
 
     pthread_mutex_lock(&group->mutex);
     group->satByTable = true;
     group->table = table;
+    pthread_cond_broadcast(&group->cond);
     pthread_mutex_unlock(&group->mutex);
-    pthread_cond_signal(&group->cond);
 }
 
-void lookForFreeTableAndSeatGroupByIt(Table** tables, pthread_mutex_t &tablesMutex, pthread_cond_t &tablesCond, int waiterNumber, Group* group) {
+void lookForFreeTableAndSeatGroupByIt(
+        int waiterNumber,
+        Group* group,
+        Table** tables,
+        size_t size,
+        pthread_mutex_t &tablesMutex,
+        pthread_cond_t &tablesCond
+    ) {
     pthread_mutex_lock(&tablesMutex);
     int neededNumOfSeats = group->size == PAIR_SIZE && group->pair ? MAX_SEATS_PER_TABLE : group->size;
-    int tableNumber;
-    while ((tableNumber = findFreeTableIndex(tables, TABLE_STATES, neededNumOfSeats)) == -1) {
+    bool indexFound = false;
+    while (!indexFound) {
         #ifdef SLEEPS_AND_PRINTS
-        printf("Waiter %d awaits free table\n", waiterNumber);
+        printf("Waiter %d searches for table for Group %d\n", waiterNumber, group->id);
         #endif
-        pthread_cond_wait(&tablesCond, &tablesMutex);
+        for (int i = 0; i < size && !indexFound; i++) {
+            pthread_mutex_lock(&tables[i]->mutex);
+            if (
+                tables[i]->availableSeats >= neededNumOfSeats &&
+                (tables[i]->leaveVotes == 0 ||
+                tables[i]->takenSeats != tables[i]->leaveVotes)
+            ) {
+                indexFound = true;
+                #ifdef SLEEPS_AND_PRINTS
+                printf("Waiter %d seats Group %d at table %d\n", waiterNumber, group->id, tables[i]->id);
+                #endif
+                seatGroupByTable(group, tables[i]);
+            }
+            pthread_mutex_unlock(&tables[i]->mutex);
+        }
+        if (!indexFound) {
+            #ifdef SLEEPS_AND_PRINTS
+            printf("Waiter %d awaits for table for Group %d\n", waiterNumber, group->id);
+            #endif
+            pthread_cond_wait(&tablesCond, &tablesMutex);
+        }
     }
-
-    Table* table = tables[tableNumber];
-    #ifdef SLEEPS_AND_PRINTS
-    printf("Waiter %d seats Group %d at table %d\n", waiterNumber, group->id, table->id);
-    #endif
-    seatGroupByTable(group, table);
-
     pthread_mutex_unlock(&tablesMutex);
-    pthread_cond_broadcast(&tablesCond);
 }

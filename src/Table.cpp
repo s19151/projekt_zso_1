@@ -39,13 +39,3 @@ void destroyTables(Table** tables, int numOfTables) {
     }
     delete [] tables;
 }
-
-int findFreeTableIndex(Table** tables, size_t size, int neededNumOfSeats) {
-    int index;
-    bool indexFound = false;
-    for (index = 0; index < size && !indexFound;) {
-        index++;
-        indexFound = tables[index]->availableSeats >= neededNumOfSeats;
-    }
-    return indexFound ? index : -1;
-}

@@ -33,7 +33,14 @@ void takeCareOfGroupsInRestaurantQueue(int waiterNumber) {
         restaurantQueue.pop();
         pthread_mutex_unlock(&queueMutex);
 
-        lookForFreeTableAndSeatGroupByIt(tables, tablesMutex, tablesCond, waiterNumber, group);
+        lookForFreeTableAndSeatGroupByIt(
+            waiterNumber,
+            group,
+            tables,
+            NUM_OF_TABLES,
+            tablesMutex,
+            tablesCond
+        );
     } else {
         pthread_mutex_unlock(&queueMutex);
     }
@@ -63,18 +70,20 @@ void* clientThreadFn(void* arg) {
 void* groupThreadFn(void* arg) {
     Group* group = (Group*)arg;
 
-    enterRestaurantQueue(restaurantQueue, queueMutex, queueCond, group);
+    enterRestaurantQueue(group, restaurantQueue, queueMutex, queueCond);
     waitForTable(group);
     createClientThreads(group, clientThreadFn);
     joinClientThreads(group);
-    leaveRestaurant(group);
+    leaveRestaurant(group, tablesMutex, tablesCond);
 
     return NULL;
 }
 
 void stopProgram() {
     programFinished = true;
+    pthread_mutex_lock(&queueMutex);
     pthread_cond_broadcast(&queueCond);
+    pthread_mutex_unlock(&queueMutex);
 }
 
 void initializePthreadVariables() {
@@ -91,7 +100,7 @@ void destroyPthreadVariables() {
     pthread_cond_destroy(&tablesCond);
 }
 
-void projekt_zso(int numOfTables, int NumOfSeats, int numOfGroups, int numOfWaiters) {
+void projekt_zso(int numOfTables, int NumOfSeats, int numOfGroups, int maxGroupSize, int numOfWaiters) {
     #ifdef SLEEPS_AND_PRINTS
     printf("Restaurant opens\n");
     #endif
@@ -99,7 +108,7 @@ void projekt_zso(int numOfTables, int NumOfSeats, int numOfGroups, int numOfWait
     initializePthreadVariables();
     tables = createTables(numOfTables, NumOfSeats);
     pthread_t* waiters = new pthread_t[numOfWaiters];
-    Group** groups = createGroups(numOfGroups);
+    Group** groups = createGroups(numOfGroups, maxGroupSize);
     programFinished = false;
 
     createWaiterThreads(waiters, numOfWaiters, waiterThreadFn);
@@ -123,9 +132,15 @@ void projekt_zso(int numOfTables, int NumOfSeats, int numOfGroups, int numOfWait
 int main(int argc, char* argv[]) {
     for (int i = 0; i < NUM_OF_LOOPS; i++) {
         #ifdef SLEEPS_AND_PRINTS
-        printf("Program loop: %d\n", i+1);
+        printf("--------- Program loop: %d ---------\n", i+1);
         #endif
-        projekt_zso(NUM_OF_TABLES, MAX_SEATS_PER_TABLE, NUM_OF_GROUPS, NUM_OF_WAITERS);
+        projekt_zso(
+            NUM_OF_TABLES,
+            MAX_SEATS_PER_TABLE,
+            NUM_OF_GROUPS,
+            MAX_GROUP_SIZE,
+            NUM_OF_WAITERS
+        );
     }
 
     return 0;

@@ -21,7 +21,7 @@ struct Group {
 
 Group* createGroup(int id, size_t size, bool pair);
 
-Group** createGroups(int numOfGroups);
+Group** createGroups(int numOfGroups, int maxGroupSize);
 
 void destroyGroup(Group* group);
 
@@ -29,10 +29,10 @@ void createGroupThreads(Group** groups, size_t size, void* callbackFn(void* arg)
 
 void joinGroupThreads(Group** groups, size_t size);
 
-void enterRestaurantQueue(queue<Group*> &queue, pthread_mutex_t &queueMutex, pthread_cond_t &queueCond, Group* group);
+void enterRestaurantQueue(Group* group, queue<Group*> &queue, pthread_mutex_t &queueMutex, pthread_cond_t &queueCond);
 
 void waitForTable(Group* group);
 
-void leaveRestaurant(Group* group);
+void leaveRestaurant(Group* group, pthread_mutex_t tablesMutex, pthread_cond_t tablesCond);
 
 #endif

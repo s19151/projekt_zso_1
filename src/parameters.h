@@ -6,7 +6,6 @@
 const int MAX_GROUP_SIZE = 4;
 const int PAIR_SIZE = 2;
 const int MAX_SEATS_PER_TABLE = 4;
-const int TABLE_STATES = MAX_SEATS_PER_TABLE + 1;
 
 const int NUM_OF_WAITERS = 4;
 const int NUM_OF_TABLES = 10;
